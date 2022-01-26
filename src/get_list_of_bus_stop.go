@@ -1,4 +1,4 @@
-package main
+package src
 
 import (
 	"fmt"
@@ -18,52 +18,7 @@ type BusStopInfo struct {
 
 var listOfBusStopNames []BusStopInfo
 
-func main() {
-	r := gin.Default()
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Hello World",
-		})
-	})
-	r.GET("/bus-timing", getBusTiming)
-	r.GET("/list-of-bus-stop", getListOfBusStop)
-	r.Run()
-}
-
-func getBusTiming(c *gin.Context) {
-	busId := c.Query("bus-id")
-	url := fmt.Sprintf("https://dummy.uwave.sg/busstop/%s", busId)
-	response, err := http.Get(url)
-
-	if err != nil {
-		fmt.Print(err.Error())
-	}
-
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		fmt.Print(err.Error())
-	}
-	type BusName struct {
-		Name string `json:"short_name"`
-	}
-
-	type Forecast struct {
-		ForecastSeconds float32 `json:"forecast_seconds"`
-		BusId           int32   `json:"rv_id"`
-		BusName BusName `json:"route"`
-	}
-
-	type BusStopTiming struct {
-		Forecast []Forecast `json:"forecast"`
-	}
-
-	var responseObject BusStopTiming
-	json.Unmarshal(body, &responseObject)
-
-	c.JSON(200, gin.H{"forecast": responseObject.Forecast})
-}
-
-func getListOfBusStop(c *gin.Context) {
+func GetListOfBusStop(c *gin.Context) {
 
 	if len(listOfBusStopNames) > 0 {
 		c.JSON(200, gin.H{"listOfBusStopNames": listOfBusStopNames})
@@ -100,5 +55,4 @@ func getListOfBusStop(c *gin.Context) {
 		}
 		c.JSON(200, gin.H{"listOfBusStopNames": listOfBusStopNames})
 	}
-
 }
