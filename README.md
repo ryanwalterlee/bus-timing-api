@@ -40,11 +40,11 @@ Backend service created with Go Programming Language that uses 2 endpoints and r
     <img src="./assets/opened-bus-stop.jpg" alt="nus next bus homepage" width="200"/>
     <img src="./assets/nus-buses-map.jpg" alt="nus next bus homepage" width="200"/>
 
-In the leftmost image, "/list-of-bus-stop" API call is used to generate information on bus stop names
+In the first image, "/list-of-bus-stop" API call is used to generate information on bus stop names
 
-In the middle image, "/bus-timing" API call is used to get bus timings for each bus using the id that was saved from the previous call. Note that the format of the Json matches the format of the frontend exactly
+In the second image, "/bus-timing" API call is used to get bus timings for each bus using the id that was saved from the previous call. Note that the format of the Json matches the format of the frontend exactly
 
-In the right image, "/bus-location" API call is used to get the location of all the buses of a bus line using bus-id from the previous call
+In the third image, "/bus-location" API call is used to get the location of all the buses of a bus line using bus-id from the previous call
 
 # Improvements
 
