@@ -15,6 +15,7 @@ func main() {
 	})
 	r.GET("/bus-timing", src.GetBusTiming)
 	r.GET("/list-of-bus-stop", src.GetListOfBusStop)
+	r.GET("/bus-location", src.GetBusLocation)
 	r.Run()
 }
 

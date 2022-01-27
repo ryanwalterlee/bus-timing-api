@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"math"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -32,9 +33,30 @@ type BusStopTimingFormatted struct {
 	ShortName string
 }
 
+type LastCheckedTime struct {
+	Time time.Time
+	BusTimingMap map[string][]int32
+}
+
+var mapCache map[string]LastCheckedTime = make(map[string]LastCheckedTime)
+
 
 func GetBusTiming(c *gin.Context) {
+
 	busId := c.Query("bus-id")
+	lastCheckedTime , entryExists := mapCache[busId]
+
+	// if map entry exist and is not outdated, return it
+	if (entryExists && time.Now().Sub(lastCheckedTime.Time) < 60*1000*1000*1000) {
+		c.JSON(200, lastCheckedTime.BusTimingMap)
+
+	} else { // else call the api and reupdate map
+		apiCall(c, busId)
+	}
+	
+}
+
+func apiCall(c *gin.Context, busId string) {
 	url := fmt.Sprintf("https://dummy.uwave.sg/busstop/%s", busId)
 	response, err := http.Get(url)
 
@@ -54,9 +76,13 @@ func GetBusTiming(c *gin.Context) {
 
 	m := structToMap(BusStopTimingFormatted)
 
+	// update cache
+	mapCache[busId] = LastCheckedTime{time.Now(), m}
+
 	c.JSON(200, m)
 }
 
+// place all fields on the same level
 func formatBusStopTiming(responseObject BusStopTiming) []BusStopTimingFormatted{
 	
 	var forecastArray []BusStopTimingFormatted
@@ -72,6 +98,7 @@ func formatBusStopTiming(responseObject BusStopTiming) []BusStopTimingFormatted{
 	return forecastArray
 }
 
+// convert seconds to minutes with error handling
 func secondsToMinutes(seconds float32) int32{
 	seconds64 := float64(seconds) / 60
 	var minutes int32
@@ -83,6 +110,7 @@ func secondsToMinutes(seconds float32) int32{
 	return minutes
 }
 
+// turn the struct into a map with an array of forecast timings for each bus service
 func structToMap(busStopTimingFormattedArray []BusStopTimingFormatted) map[string][]int32{
 	m := make(map[string][]int32)
 	for i := 0; i < len(busStopTimingFormattedArray); i++ {
