@@ -4,8 +4,12 @@ Backend service created with Go Programming Language that uses 2 endpoints and r
 # API methods
 1. Get bus timing at a certain bus stop id
     - path: "/bus-timing"
-    - query string: "bus-id"
-    - return format: { "bus name" : [ array of subsequent bus timing ], ... }
+    - query string: "bus-stop-id"
+    - return format: { "bus name" : 
+        {
+        "ForecastArray": [ array of subsequent bus timing ],
+        "BusId": "BusId"
+         }
     - cache: able to cache bus timing information at a certain stop, expires after 1 minute
     - example:
 
@@ -27,3 +31,21 @@ Backend service created with Go Programming Language that uses 2 endpoints and r
     
         ![get bus location example](./assets/get-bus-location-example.jpg)
     - reason for design: Only returns relevant information which is lat and lon which is used to display locations on the map, registration code (which is license plate) can also be used to uniquely identify buses on the map
+
+# How the frontend will use this API
+- assumptions: I will assume the frontend is the NUS NextBus App
+
+
+    <img src="./assets/nus-buses-homepage.jpg" alt="nus next bus homepage" width="200"/>
+    <img src="./assets/opened-bus-stop.jpg" alt="nus next bus homepage" width="200"/>
+    <img src="./assets/nus-buses-map.jpg" alt="nus next bus homepage" width="200"/>
+
+In the leftmost image, "/list-of-bus-stop" API call is used to generate information on bus stop names
+
+In the middle image, "/bus-timing" API call is used to get bus timings for each bus using the id that was saved from the previous call. Note that the format of the Json matches the format of the frontend exactly
+
+In the right image, "/bus-location" API call is used to get the location of all the buses of a bus line using bus-id from the previous call
+
+# Improvements
+
+The power of caching becomes apparent in the "/bus-timing" API call. Once an API call is made to the provided endpoint, this API will cache the bus timing arrival information and return instantly when another API call is made. To ensure optimal accuracy, this cache is only valid for 1 minute. The benefit of this is that it can reduce the number of API calls to the endpoints yet balance the accuracy of the bus timing.

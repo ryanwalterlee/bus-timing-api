@@ -33,9 +33,14 @@ type BusStopTimingFormatted struct {
 	ShortName string
 }
 
+type ForecastFormatted struct {
+	ForecastArray []int32
+	BusId int32
+}
+
 type LastCheckedTime struct {
 	Time time.Time
-	BusTimingMap map[string][]int32
+	BusTimingMap map[string]ForecastFormatted
 }
 
 var mapCache map[string]LastCheckedTime = make(map[string]LastCheckedTime)
@@ -43,7 +48,7 @@ var mapCache map[string]LastCheckedTime = make(map[string]LastCheckedTime)
 
 func GetBusTiming(c *gin.Context) {
 
-	busId := c.Query("bus-id")
+	busId := c.Query("bus-stop-id")
 	lastCheckedTime , entryExists := mapCache[busId]
 
 	// if map entry exist and is not outdated, return it
@@ -72,7 +77,11 @@ func apiCall(c *gin.Context, busId string) {
 	var responseObject BusStopTiming
 	json.Unmarshal(body, &responseObject)
 
+	fmt.Println(responseObject)
+
 	BusStopTimingFormatted := formatBusStopTiming(responseObject)
+
+	fmt.Println(BusStopTimingFormatted)
 
 	m := structToMap(BusStopTimingFormatted)
 
@@ -111,16 +120,24 @@ func secondsToMinutes(seconds float32) int32{
 }
 
 // turn the struct into a map with an array of forecast timings for each bus service
-func structToMap(busStopTimingFormattedArray []BusStopTimingFormatted) map[string][]int32{
-	m := make(map[string][]int32)
+func structToMap(busStopTimingFormattedArray []BusStopTimingFormatted) map[string]ForecastFormatted{
+	m := make(map[string]ForecastFormatted)
 	for i := 0; i < len(busStopTimingFormattedArray); i++ {
 		currBusStop := busStopTimingFormattedArray[i].ShortName
-		listOfTimings, busStopExists := m[currBusStop]
+		forecastFormatted, busStopExists := m[currBusStop]
+		
 		if (busStopExists) {
-			m[currBusStop] = append(listOfTimings, busStopTimingFormattedArray[i].ForecastMinutes)
+			listOfTimings := forecastFormatted.ForecastArray
+			m[currBusStop] = ForecastFormatted{
+				append(listOfTimings, busStopTimingFormattedArray[i].ForecastMinutes),
+				busStopTimingFormattedArray[i].BusId,
+			}
 		} else {
 			var newArray []int32
-			m[currBusStop] = append(newArray, busStopTimingFormattedArray[i].ForecastMinutes)
+			m[currBusStop] = ForecastFormatted{
+				append(newArray, busStopTimingFormattedArray[i].ForecastMinutes),
+				busStopTimingFormattedArray[i].BusId,
+			}
 		}
 		
 	}
