@@ -52,11 +52,9 @@ func GetBusTiming(c *gin.Context) {
 
 	BusStopTimingFormatted := formatBusStopTiming(responseObject)
 
-	// m := make(map[string]int)
+	m := structToMap(BusStopTimingFormatted)
 
-	fmt.Println(BusStopTimingFormatted)
-
-	c.JSON(200, gin.H{"forecast": BusStopTimingFormatted})
+	c.JSON(200, m)
 }
 
 func formatBusStopTiming(responseObject BusStopTiming) []BusStopTimingFormatted{
@@ -83,4 +81,20 @@ func secondsToMinutes(seconds float32) int32{
 		minutes = int32(math.Ceil(seconds64))
 	}
 	return minutes
+}
+
+func structToMap(busStopTimingFormattedArray []BusStopTimingFormatted) map[string][]int32{
+	m := make(map[string][]int32)
+	for i := 0; i < len(busStopTimingFormattedArray); i++ {
+		currBusStop := busStopTimingFormattedArray[i].ShortName
+		listOfTimings, busStopExists := m[currBusStop]
+		if (busStopExists) {
+			m[currBusStop] = append(listOfTimings, busStopTimingFormattedArray[i].ForecastMinutes)
+		} else {
+			var newArray []int32
+			m[currBusStop] = append(newArray, busStopTimingFormattedArray[i].ForecastMinutes)
+		}
+		
+	}
+	return m
 }
